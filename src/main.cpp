@@ -154,18 +154,23 @@ static void render() {
 
 void setup() {
   Serial.begin(115200);
+  delay(300);
+  Serial.println("BOOT ok");
   randomSeed(esp_random());
 
   pinMode(PIN_LCD_BL, OUTPUT);
   digitalWrite(PIN_LCD_BL, HIGH);
 
+  Serial.printf("PSRAM size: %u bytes\n", ESP.getPsramSize());
   gfx->begin();
+  Serial.println("gfx->begin() done");
   if (LCD_INVERT) {
     static const uint8_t inv_on[] = { BEGIN_WRITE, WRITE_COMMAND_8, 0x21, END_WRITE };
     bus->batchOperation(inv_on, sizeof(inv_on));
   }
 
   canvas = new Arduino_Canvas(SCREEN_W, SCREEN_H, gfx);
+  Serial.printf("canvas: %p\n", (void*)canvas);
 
   COL_BG    = gfx->color565(14, 16, 34);
   COL_EYE   = 0xFFFF;
@@ -173,6 +178,7 @@ void setup() {
   COL_PUPIL = gfx->color565(18, 22, 52);
   COL_SHINE = 0xFFFF;
 
+  Serial.println("setup done, starting loop");
   a.blinking = true;
   a.blinkT = 0.5f;
   a.blink = 1;
