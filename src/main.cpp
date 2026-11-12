@@ -168,10 +168,10 @@ void setup() {
   canvas = new Arduino_Canvas(SCREEN_W, SCREEN_H, gfx);
 
   COL_BG    = gfx->color565(14, 16, 34);
-  COL_EYE   = TFT_WHITE;
+  COL_EYE   = 0xFFFF;
   COL_LINE  = gfx->color565(35, 38, 60);
   COL_PUPIL = gfx->color565(18, 22, 52);
-  COL_SHINE = TFT_WHITE;
+  COL_SHINE = 0xFFFF;
 
   a.blinking = true;
   a.blinkT = 0.5f;
