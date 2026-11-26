@@ -25,7 +25,6 @@ static constexpr float PI_F = 3.14159265358979f;
 
 Arduino_DataBus *bus = new Arduino_ESP32SPI(PIN_LCD_DC, PIN_LCD_CS, PIN_LCD_SCK, PIN_LCD_MOSI);
 Arduino_GFX *gfx = new Arduino_ST7789(bus, PIN_LCD_RST, 0, false, SCREEN_W, SCREEN_H, 34, 0, 34, 0);
-Arduino_Canvas *canvas = nullptr;
 Arduino_GFX *out = nullptr;
 
 uint16_t COL_BG, COL_EYE, COL_LINE, COL_PUPIL, COL_SHINE;
@@ -150,7 +149,6 @@ static void render() {
   drawEye(EYE_CX_R, -1);
   drawBrow(EYE_CX_L, +1);
   drawBrow(EYE_CX_R, -1);
-  if (canvas) canvas->flush();
 }
 
 void setup() {
@@ -180,14 +178,8 @@ void setup() {
   Serial.println("test: BLUE");
   delay(1200);
 
-  canvas = new Arduino_Canvas(SCREEN_W, SCREEN_H, gfx);
-  if (canvas && canvas->getBuffer()) {
-    out = canvas;
-    Serial.printf("canvas ok: %p\n", (void*)canvas->getBuffer());
-  } else {
-    out = gfx;
-    Serial.println("canvas FAILED, drawing directly to gfx");
-  }
+  out = gfx;
+  Serial.println("drawing directly to gfx (no canvas)");
 
   COL_BG    = gfx->color565(14, 16, 34);
   COL_EYE   = 0xFFFF;
