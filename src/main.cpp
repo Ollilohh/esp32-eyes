@@ -233,13 +233,13 @@ void setup() {
   bus->batchOperation(jd9853_init, sizeof(jd9853_init));
   Serial.println("JD9853 init sent");
 
-  canvas = new Arduino_Canvas(SCREEN_W, SCREEN_H, gfx);
-  if (canvas && canvas->getBuffer()) {
+  if (ESP.getPsramSize() > 0) {
+    canvas = new Arduino_Canvas(SCREEN_W, SCREEN_H, gfx);
     out = canvas;
-    Serial.printf("canvas ok: %p\n", (void*)canvas->getBuffer());
+    Serial.println("canvas ok (PSRAM double buffering)");
   } else {
     out = gfx;
-    Serial.println("canvas FAILED, drawing directly to gfx");
+    Serial.println("no PSRAM, drawing directly to gfx");
   }
 
   COL_BG    = gfx->color565(14, 16, 34);
