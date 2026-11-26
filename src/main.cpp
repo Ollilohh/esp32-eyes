@@ -169,7 +169,7 @@ void setup() {
   randomSeed(esp_random());
 
   pinMode(PIN_LCD_BL, OUTPUT);
-  analogWrite(PIN_LCD_BL, 170);
+  digitalWrite(PIN_LCD_BL, HIGH);
 
   Serial.printf("PSRAM size: %lu bytes\n", (unsigned long)ESP.getPsramSize());
   gfx->begin();
