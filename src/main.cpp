@@ -159,7 +159,6 @@ static void render() {
   drawEye(EYE_CX_R, -1);
   drawBrow(EYE_CX_L, +1);
   drawBrow(EYE_CX_R, -1);
-  if (canvas) canvas->flush();
 }
 
 void setup() {
@@ -227,14 +226,8 @@ void setup() {
   bus->batchOperation(jd9853_init, sizeof(jd9853_init));
   Serial.println("JD9853 init sent");
 
-  if (ESP.getPsramSize() > 0) {
-    canvas = new Arduino_Canvas(SCREEN_W, SCREEN_H, gfx);
-    out = canvas;
-    Serial.println("canvas ok (PSRAM double buffering)");
-  } else {
-    out = gfx;
-    Serial.println("no PSRAM, drawing directly to gfx");
-  }
+  out = gfx;
+  Serial.println("drawing directly to gfx (no canvas)");
 
   COL_BG    = gfx->color565(14, 16, 34);
   COL_EYE   = 0xFFFF;
