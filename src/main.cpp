@@ -29,7 +29,7 @@ static int16_t EYE_R, EYE_Y, EYE_CX_L, EYE_CX_R, PUPIL_R, BROW_Y, BROW_HALF;
 static constexpr float PI_F = 3.14159265358979f;
 
 Arduino_DataBus *bus = new Arduino_ESP32SPI(PIN_LCD_DC, PIN_LCD_CS, PIN_LCD_SCK, PIN_LCD_MOSI);
-Arduino_GFX *gfx = new Arduino_ST7789(bus, PIN_LCD_RST, 0, false, 172, 320, 34, 0, 0, 34);
+Arduino_GFX *gfx = new Arduino_ST7789(bus, PIN_LCD_RST, 0, false, 172, 320, 34, 0, 34, 0);
 
 uint16_t COL_BG, COL_EYE, COL_LINE, COL_PUPIL, COL_SHINE;
 
