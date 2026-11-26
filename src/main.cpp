@@ -34,6 +34,7 @@ static constexpr float PI_F = 3.14159265358979f;
 
 Arduino_DataBus *bus = new Arduino_ESP32SPI(PIN_LCD_DC, PIN_LCD_CS, PIN_LCD_SCK, PIN_LCD_MOSI);
 Arduino_GFX *gfx = new Arduino_ST7789(bus, PIN_LCD_RST, 0, false, SCREEN_W, SCREEN_H, 34, 0, 34, 0);
+Arduino_Canvas *canvas = nullptr;
 Arduino_GFX *out = nullptr;
 
 uint16_t COL_BG, COL_EYE, COL_LINE, COL_PUPIL, COL_SHINE;
@@ -158,6 +159,7 @@ static void render() {
   drawEye(EYE_CX_R, -1);
   drawBrow(EYE_CX_L, +1);
   drawBrow(EYE_CX_R, -1);
+  if (canvas) canvas->flush();
 }
 
 void setup() {
@@ -167,7 +169,7 @@ void setup() {
   randomSeed(esp_random());
 
   pinMode(PIN_LCD_BL, OUTPUT);
-  digitalWrite(PIN_LCD_BL, HIGH);
+  analogWrite(PIN_LCD_BL, 170);
 
   Serial.printf("PSRAM size: %lu bytes\n", (unsigned long)ESP.getPsramSize());
   gfx->begin();
@@ -231,18 +233,14 @@ void setup() {
   bus->batchOperation(jd9853_init, sizeof(jd9853_init));
   Serial.println("JD9853 init sent");
 
-  gfx->fillScreen(0xF800);
-  Serial.println("test: RED");
-  delay(1200);
-  gfx->fillScreen(0x07E0);
-  Serial.println("test: GREEN");
-  delay(1200);
-  gfx->fillScreen(0x001F);
-  Serial.println("test: BLUE");
-  delay(1200);
-
-  out = gfx;
-  Serial.println("drawing directly to gfx (no canvas)");
+  canvas = new Arduino_Canvas(SCREEN_W, SCREEN_H, gfx);
+  if (canvas && canvas->getBuffer()) {
+    out = canvas;
+    Serial.printf("canvas ok: %p\n", (void*)canvas->getBuffer());
+  } else {
+    out = gfx;
+    Serial.println("canvas FAILED, drawing directly to gfx");
+  }
 
   COL_BG    = gfx->color565(14, 16, 34);
   COL_EYE   = 0xFFFF;
