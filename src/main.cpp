@@ -26,6 +26,7 @@ static constexpr float PI_F = 3.14159265358979f;
 Arduino_DataBus *bus = new Arduino_ESP32SPI(PIN_LCD_DC, PIN_LCD_CS, PIN_LCD_SCK, PIN_LCD_MOSI);
 Arduino_GFX *gfx = new Arduino_ST7789(bus, PIN_LCD_RST, 0, false, SCREEN_W, SCREEN_H, 34, 0, 34, 0);
 Arduino_Canvas *canvas = nullptr;
+Arduino_GFX *out = nullptr;
 
 uint16_t COL_BG, COL_EYE, COL_LINE, COL_PUPIL, COL_SHINE;
 
@@ -102,33 +103,33 @@ static void drawEye(int16_t cx, int side) {
   float topC = a.topLid + a.blink * (1.0f - a.topLid);
   float botC = a.blink * (1.0f - a.topLid);
 
-  canvas->fillCircle(cx, EYE_Y, EYE_R, COL_EYE);
-  canvas->drawCircle(cx, EYE_Y, EYE_R, COL_LINE);
-  canvas->drawCircle(cx, EYE_Y, EYE_R - 1, COL_LINE);
+  out->fillCircle(cx, EYE_Y, EYE_R, COL_EYE);
+  out->drawCircle(cx, EYE_Y, EYE_R, COL_LINE);
+  out->drawCircle(cx, EYE_Y, EYE_R - 1, COL_LINE);
 
   int topEdge = EYE_Y - EYE_R + (int)(topC * 2 * EYE_R);
   int botEdge = EYE_Y + EYE_R - (int)(botC * 2 * EYE_R);
 
   if (topC > 0.01f) {
-    canvas->fillRect(cx - EYE_R - 2, EYE_Y - EYE_R - 2, 2 * EYE_R + 4, topEdge - (EYE_Y - EYE_R) + 2, COL_BG);
+    out->fillRect(cx - EYE_R - 2, EYE_Y - EYE_R - 2, 2 * EYE_R + 4, topEdge - (EYE_Y - EYE_R) + 2, COL_BG);
     int dy = topEdge - EYE_Y;
     int hw = (int)sqrtf((float)(EYE_R * EYE_R - dy * dy));
-    canvas->drawLine(cx - hw, topEdge, cx + hw, topEdge, COL_LINE);
-    canvas->drawLine(cx - hw, topEdge + 1, cx + hw, topEdge + 1, COL_LINE);
+    out->drawLine(cx - hw, topEdge, cx + hw, topEdge, COL_LINE);
+    out->drawLine(cx - hw, topEdge + 1, cx + hw, topEdge + 1, COL_LINE);
   }
   if (botC > 0.01f) {
-    canvas->fillRect(cx - EYE_R - 2, botEdge, 2 * EYE_R + 4, EYE_Y + EYE_R + 2 - botEdge, COL_BG);
+    out->fillRect(cx - EYE_R - 2, botEdge, 2 * EYE_R + 4, EYE_Y + EYE_R + 2 - botEdge, COL_BG);
     int dy = botEdge - EYE_Y;
     int hw = (int)sqrtf((float)(EYE_R * EYE_R - dy * dy));
-    canvas->drawLine(cx - hw, botEdge, cx + hw, botEdge, COL_LINE);
+    out->drawLine(cx - hw, botEdge, cx + hw, botEdge, COL_LINE);
   }
 
   float hv = EYE_R * (1.0f - topC - botC);
   if (hv > PUPIL_R + 2) {
     int px = cx + (int)(gx * (EYE_R - PUPIL_R));
     int py = EYE_Y + (int)(a.gazeY * (hv - PUPIL_R));
-    canvas->fillCircle(px, py, PUPIL_R, COL_PUPIL);
-    canvas->fillCircle(px - PUPIL_R / 3, py - PUPIL_R / 3, 3, COL_SHINE);
+    out->fillCircle(px, py, PUPIL_R, COL_PUPIL);
+    out->fillCircle(px - PUPIL_R / 3, py - PUPIL_R / 3, 3, COL_SHINE);
   }
 }
 
@@ -139,17 +140,17 @@ static void drawBrow(int16_t cx, int side) {
   int y0 = (side > 0) ? (BROW_Y - t) : (BROW_Y + t);
   int y1 = (side > 0) ? (BROW_Y + t) : (BROW_Y - t);
   for (int i = 0; i < 3; i++) {
-    canvas->drawLine(x0, y0 + i, x1, y1 + i, COL_LINE);
+    out->drawLine(x0, y0 + i, x1, y1 + i, COL_LINE);
   }
 }
 
 static void render() {
-  canvas->fillScreen(COL_BG);
+  out->fillScreen(COL_BG);
   drawEye(EYE_CX_L, +1);
   drawEye(EYE_CX_R, -1);
   drawBrow(EYE_CX_L, +1);
   drawBrow(EYE_CX_R, -1);
-  canvas->flush();
+  if (canvas) canvas->flush();
 }
 
 void setup() {
@@ -169,8 +170,24 @@ void setup() {
     bus->batchOperation(inv_on, sizeof(inv_on));
   }
 
+  gfx->fillScreen(0xF800);
+  Serial.println("test: RED");
+  delay(1200);
+  gfx->fillScreen(0x07E0);
+  Serial.println("test: GREEN");
+  delay(1200);
+  gfx->fillScreen(0x001F);
+  Serial.println("test: BLUE");
+  delay(1200);
+
   canvas = new Arduino_Canvas(SCREEN_W, SCREEN_H, gfx);
-  Serial.printf("canvas: %p\n", (void*)canvas);
+  if (canvas && canvas->getBuffer()) {
+    out = canvas;
+    Serial.printf("canvas ok: %p\n", (void*)canvas->getBuffer());
+  } else {
+    out = gfx;
+    Serial.println("canvas FAILED, drawing directly to gfx");
+  }
 
   COL_BG    = gfx->color565(14, 16, 34);
   COL_EYE   = 0xFFFF;
