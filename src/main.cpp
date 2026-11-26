@@ -1,14 +1,23 @@
 #include <Arduino.h>
 #include <Arduino_GFX_Library.h>
 
+static const bool BOARD_TOUCH_VARIANT = true;
+
+#if BOARD_TOUCH_VARIANT
 static const int8_t PIN_LCD_DC   = 45;
 static const int8_t PIN_LCD_CS   = 21;
 static const int8_t PIN_LCD_SCK  = 38;
 static const int8_t PIN_LCD_MOSI = 39;
 static const int8_t PIN_LCD_RST  = 47;
 static const int8_t PIN_LCD_BL   = 46;
-
-static const bool LCD_INVERT = true;
+#else
+static const int8_t PIN_LCD_DC   = 41;
+static const int8_t PIN_LCD_CS   = 42;
+static const int8_t PIN_LCD_SCK  = 40;
+static const int8_t PIN_LCD_MOSI = 45;
+static const int8_t PIN_LCD_RST  = 39;
+static const int8_t PIN_LCD_BL   = 48;
+#endif
 
 static const int16_t SCREEN_W = 172;
 static const int16_t SCREEN_H = 320;
@@ -160,7 +169,7 @@ void setup() {
   pinMode(PIN_LCD_BL, OUTPUT);
   digitalWrite(PIN_LCD_BL, HIGH);
 
-  Serial.printf("PSRAM size: %u bytes\n", ESP.getPsramSize());
+  Serial.printf("PSRAM size: %lu bytes\n", (unsigned long)ESP.getPsramSize());
   gfx->begin();
   Serial.println("gfx->begin() done");
   static const uint8_t jd9853_init[] = {
