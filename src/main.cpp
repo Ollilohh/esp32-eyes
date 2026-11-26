@@ -19,21 +19,21 @@ static const int8_t PIN_LCD_RST  = 39;
 static const int8_t PIN_LCD_BL   = 48;
 #endif
 
-static const int16_t SCREEN_W = 172;
-static const int16_t SCREEN_H = 320;
+static const int16_t SCREEN_W = 320;
+static const int16_t SCREEN_H = 172;
 
-static const int16_t EYE_R    = 40;
-static const int16_t EYE_Y    = 150;
-static const int16_t EYE_CX_L = 48;
-static const int16_t EYE_CX_R = 124;
-static const int16_t PUPIL_R  = 13;
-static const int16_t BROW_Y   = EYE_Y - EYE_R - 16;
-static const int16_t BROW_HALF = 26;
+static const int16_t EYE_R    = 56;
+static const int16_t EYE_Y    = 88;
+static const int16_t EYE_CX_L = 92;
+static const int16_t EYE_CX_R = 228;
+static const int16_t PUPIL_R  = 18;
+static const int16_t BROW_Y   = EYE_Y - EYE_R - 12;
+static const int16_t BROW_HALF = 38;
 
 static constexpr float PI_F = 3.14159265358979f;
 
 Arduino_DataBus *bus = new Arduino_ESP32SPI(PIN_LCD_DC, PIN_LCD_CS, PIN_LCD_SCK, PIN_LCD_MOSI);
-Arduino_GFX *gfx = new Arduino_ST7789(bus, PIN_LCD_RST, 0, false, SCREEN_W, SCREEN_H, 34, 0, 34, 0);
+Arduino_GFX *gfx = new Arduino_ST7789(bus, PIN_LCD_RST, 1, false, 172, 320, 34, 0, 0, 34);
 Arduino_Canvas *canvas = nullptr;
 Arduino_GFX *out = nullptr;
 
@@ -213,16 +213,10 @@ void setup() {
     WRITE_BYTES, 3, 0x01, 0x02, 0x00,
     WRITE_C8_D8, 0xDE, 0x00,
     WRITE_C8_D8, 0x35, 0x00,
-    WRITE_C8_D8, 0x3A, 0x05,
-    WRITE_COMMAND_8, 0x2A,
-    WRITE_BYTES, 4, 0x00, 0x22, 0x00, 0xCD,
-    WRITE_COMMAND_8, 0x2B,
-    WRITE_BYTES, 4, 0x00, 0x00, 0x01, 0x3F,
     WRITE_C8_D8, 0xDE, 0x02,
     WRITE_COMMAND_8, 0xE5,
     WRITE_BYTES, 3, 0x00, 0x02, 0x00,
     WRITE_C8_D8, 0xDE, 0x00,
-    WRITE_C8_D8, 0x36, 0x00,
     WRITE_COMMAND_8, 0x21,
     END_WRITE,
     DELAY, 10,
