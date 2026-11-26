@@ -19,23 +19,17 @@ static const int8_t PIN_LCD_RST  = 39;
 static const int8_t PIN_LCD_BL   = 48;
 #endif
 
-static const int16_t SCREEN_W = 320;
-static const int16_t SCREEN_H = 172;
+static const uint8_t LCD_ROTATION = 1;
 
-static const int16_t EYE_R    = 56;
-static const int16_t EYE_Y    = 88;
-static const int16_t EYE_CX_L = 92;
-static const int16_t EYE_CX_R = 228;
-static const int16_t PUPIL_R  = 18;
-static const int16_t BROW_Y   = EYE_Y - EYE_R - 12;
-static const int16_t BROW_HALF = 38;
+static int16_t SCREEN_W = 172;
+static int16_t SCREEN_H = 320;
+
+static int16_t EYE_R, EYE_Y, EYE_CX_L, EYE_CX_R, PUPIL_R, BROW_Y, BROW_HALF;
 
 static constexpr float PI_F = 3.14159265358979f;
 
 Arduino_DataBus *bus = new Arduino_ESP32SPI(PIN_LCD_DC, PIN_LCD_CS, PIN_LCD_SCK, PIN_LCD_MOSI);
-Arduino_GFX *gfx = new Arduino_ST7789(bus, PIN_LCD_RST, 1, false, 172, 320, 34, 0, 0, 34);
-Arduino_Canvas *canvas = nullptr;
-Arduino_GFX *out = nullptr;
+Arduino_GFX *gfx = new Arduino_ST7789(bus, PIN_LCD_RST, 0, false, 172, 320, 34, 0, 0, 34);
 
 uint16_t COL_BG, COL_EYE, COL_LINE, COL_PUPIL, COL_SHINE;
 
@@ -112,33 +106,33 @@ static void drawEye(int16_t cx, int side) {
   float topC = a.topLid + a.blink * (1.0f - a.topLid);
   float botC = a.blink * (1.0f - a.topLid);
 
-  out->fillCircle(cx, EYE_Y, EYE_R, COL_EYE);
-  out->drawCircle(cx, EYE_Y, EYE_R, COL_LINE);
-  out->drawCircle(cx, EYE_Y, EYE_R - 1, COL_LINE);
+  gfx->fillCircle(cx, EYE_Y, EYE_R, COL_EYE);
+  gfx->drawCircle(cx, EYE_Y, EYE_R, COL_LINE);
+  gfx->drawCircle(cx, EYE_Y, EYE_R - 1, COL_LINE);
 
   int topEdge = EYE_Y - EYE_R + (int)(topC * 2 * EYE_R);
   int botEdge = EYE_Y + EYE_R - (int)(botC * 2 * EYE_R);
 
   if (topC > 0.01f) {
-    out->fillRect(cx - EYE_R - 2, EYE_Y - EYE_R - 2, 2 * EYE_R + 4, topEdge - (EYE_Y - EYE_R) + 2, COL_BG);
+    gfx->fillRect(cx - EYE_R - 2, EYE_Y - EYE_R - 2, 2 * EYE_R + 4, topEdge - (EYE_Y - EYE_R) + 2, COL_BG);
     int dy = topEdge - EYE_Y;
     int hw = (int)sqrtf((float)(EYE_R * EYE_R - dy * dy));
-    out->drawLine(cx - hw, topEdge, cx + hw, topEdge, COL_LINE);
-    out->drawLine(cx - hw, topEdge + 1, cx + hw, topEdge + 1, COL_LINE);
+    gfx->drawLine(cx - hw, topEdge, cx + hw, topEdge, COL_LINE);
+    gfx->drawLine(cx - hw, topEdge + 1, cx + hw, topEdge + 1, COL_LINE);
   }
   if (botC > 0.01f) {
-    out->fillRect(cx - EYE_R - 2, botEdge, 2 * EYE_R + 4, EYE_Y + EYE_R + 2 - botEdge, COL_BG);
+    gfx->fillRect(cx - EYE_R - 2, botEdge, 2 * EYE_R + 4, EYE_Y + EYE_R + 2 - botEdge, COL_BG);
     int dy = botEdge - EYE_Y;
     int hw = (int)sqrtf((float)(EYE_R * EYE_R - dy * dy));
-    out->drawLine(cx - hw, botEdge, cx + hw, botEdge, COL_LINE);
+    gfx->drawLine(cx - hw, botEdge, cx + hw, botEdge, COL_LINE);
   }
 
   float hv = EYE_R * (1.0f - topC - botC);
   if (hv > PUPIL_R + 2) {
     int px = cx + (int)(gx * (EYE_R - PUPIL_R));
     int py = EYE_Y + (int)(a.gazeY * (hv - PUPIL_R));
-    out->fillCircle(px, py, PUPIL_R, COL_PUPIL);
-    out->fillCircle(px - PUPIL_R / 3, py - PUPIL_R / 3, 3, COL_SHINE);
+    gfx->fillCircle(px, py, PUPIL_R, COL_PUPIL);
+    gfx->fillCircle(px - PUPIL_R / 3, py - PUPIL_R / 3, 3, COL_SHINE);
   }
 }
 
@@ -149,12 +143,12 @@ static void drawBrow(int16_t cx, int side) {
   int y0 = (side > 0) ? (BROW_Y - t) : (BROW_Y + t);
   int y1 = (side > 0) ? (BROW_Y + t) : (BROW_Y - t);
   for (int i = 0; i < 3; i++) {
-    out->drawLine(x0, y0 + i, x1, y1 + i, COL_LINE);
+    gfx->drawLine(x0, y0 + i, x1, y1 + i, COL_LINE);
   }
 }
 
 static void render() {
-  out->fillScreen(COL_BG);
+  gfx->fillScreen(COL_BG);
   drawEye(EYE_CX_L, +1);
   drawEye(EYE_CX_R, -1);
   drawBrow(EYE_CX_L, +1);
@@ -212,10 +206,16 @@ void setup() {
     WRITE_BYTES, 3, 0x01, 0x02, 0x00,
     WRITE_C8_D8, 0xDE, 0x00,
     WRITE_C8_D8, 0x35, 0x00,
+    WRITE_C8_D8, 0x3A, 0x05,
+    WRITE_COMMAND_8, 0x2A,
+    WRITE_BYTES, 4, 0x00, 0x22, 0x00, 0xCD,
+    WRITE_COMMAND_8, 0x2B,
+    WRITE_BYTES, 4, 0x00, 0x00, 0x01, 0x3F,
     WRITE_C8_D8, 0xDE, 0x02,
     WRITE_COMMAND_8, 0xE5,
     WRITE_BYTES, 3, 0x00, 0x02, 0x00,
     WRITE_C8_D8, 0xDE, 0x00,
+    WRITE_C8_D8, 0x36, 0x00,
     WRITE_COMMAND_8, 0x21,
     END_WRITE,
     DELAY, 10,
@@ -226,8 +226,19 @@ void setup() {
   bus->batchOperation(jd9853_init, sizeof(jd9853_init));
   Serial.println("JD9853 init sent");
 
-  out = gfx;
-  Serial.println("drawing directly to gfx (no canvas)");
+  gfx->setRotation(LCD_ROTATION);
+  SCREEN_W = gfx->width();
+  SCREEN_H = gfx->height();
+  Serial.printf("screen: %dx%d rotation=%d\n", SCREEN_W, SCREEN_H, LCD_ROTATION);
+
+  if (SCREEN_H > SCREEN_W) {
+    EYE_R = 40; EYE_Y = 150; EYE_CX_L = 48; EYE_CX_R = 124; PUPIL_R = 13;
+    BROW_Y = EYE_Y - EYE_R - 16;
+  } else {
+    EYE_R = 56; EYE_Y = 88; EYE_CX_L = 92; EYE_CX_R = 228; PUPIL_R = 18;
+    BROW_Y = EYE_Y - EYE_R - 12;
+  }
+  BROW_HALF = EYE_R - 2;
 
   COL_BG    = gfx->color565(14, 16, 34);
   COL_EYE   = 0xFFFF;
